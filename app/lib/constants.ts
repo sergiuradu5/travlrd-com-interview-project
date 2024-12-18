@@ -1,0 +1,1 @@
+export const INVOICE_OVERDUE_AFTER_DAYS = 14;

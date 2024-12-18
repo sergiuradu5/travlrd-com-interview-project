@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { INVOICE_OVERDUE_AFTER_DAYS } from './constants';
 import {
   CustomerField,
   CustomersTableType,
@@ -112,7 +113,17 @@ export async function fetchFilteredInvoices(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-    return invoices.rows;
+    const today = new Date();
+
+    const twoWeeksAgo = new Date(today.getTime() - INVOICE_OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000);
+
+    return invoices.rows.map((invoice) => {
+      return {
+        ...invoice,
+        status: invoice.status === 'pending' && new Date(invoice.date) < twoWeeksAgo ? 'overdue' : invoice.status,
+      }
+    });
+
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
