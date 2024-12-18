@@ -44,7 +44,7 @@ export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
   amount: number;
 };
 
-export type InvoiceStatusType = 'pending' | 'paid' | 'overdue';
+export type InvoiceStatusType = 'pending' | 'paid';
 
 export type InvoicesTable = {
   id: string;

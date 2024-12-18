@@ -113,16 +113,7 @@ export async function fetchFilteredInvoices(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-    const today = new Date();
-
-    const twoWeeksAgo = new Date(today.getTime() - INVOICE_OVERDUE_AFTER_DAYS * 24 * 60 * 60 * 1000);
-
-    return invoices.rows.map((invoice) => {
-      return {
-        ...invoice,
-        status: invoice.status === 'pending' && new Date(invoice.date) < twoWeeksAgo ? 'overdue' : invoice.status,
-      }
-    });
+   return invoices.rows;
 
   } catch (error) {
     console.error('Database Error:', error);
