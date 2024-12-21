@@ -1,3 +1,4 @@
+import { updateInvoiceStatus } from "@/app/lib/actions";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import { formatCurrency, formatDateToLocal } from "@/app/lib/utils";
 import { DeleteInvoice, UpdateInvoice } from "@/app/ui/invoices/buttons";
@@ -28,7 +29,7 @@ export default async function InvoicesTable({
                     <div className="mb-2 flex items-center">
                       <Image
                         src={invoice.image_url}
-                        className="mr-2 rounded-full"
+                        className="mr-2"
                         width={28}
                         height={28}
                         alt={`${invoice.name}'s profile picture`}
@@ -40,6 +41,12 @@ export default async function InvoicesTable({
                   <InvoiceStatus
                     status={invoice.status}
                     date={new Date(invoice.date)}
+                    id={invoice.id}
+                    updateStatus={updateInvoiceStatus.bind(
+                      null,
+                      invoice.id,
+                      invoice.status
+                    )} // Pass server action directly
                   />
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
@@ -111,6 +118,8 @@ export default async function InvoicesTable({
                     <InvoiceStatus
                       status={invoice.status}
                       date={new Date(invoice.date)}
+                      id={invoice.id}
+                      updateStatus={updateInvoiceStatus} // Pass server action directly
                     />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">

@@ -1,11 +1,12 @@
 'use server';
 
-import { z } from 'zod';
+import { signIn } from '@/auth';
 import { sql } from '@vercel/postgres';
+import { AuthError } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { signIn } from '@/auth';
-import { AuthError } from 'next-auth';
+import { z } from 'zod';
+import { invoiceStatuses, InvoiceStatusType } from './definitions';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -15,7 +16,7 @@ const FormSchema = z.object({
   amount: z.coerce
     .number()
     .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'], {
+  status: z.enum(invoiceStatuses, {
     invalid_type_error: 'Please select an invoice status.',
   }),
   date: z.string(),
@@ -23,6 +24,7 @@ const FormSchema = z.object({
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ date: true, id: true });
+const UpdateInvoiceStatus = FormSchema.pick({ status: true, id: true });
 
 export type State = {
   errors?: {
@@ -106,6 +108,41 @@ export async function updateInvoice(
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
+
+export async function updateInvoiceStatus(
+  id: string,
+  status: InvoiceStatusType
+) {
+  console.log("updateInvoiceStatus called", id, status);
+
+  // Validate the input
+  const validatedFields = UpdateInvoiceStatus.safeParse({ id, status });
+
+  if (!validatedFields.success) {
+    return {
+      status: 400,
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Validation Error: Failed to Update Invoice.",
+    };
+  }
+
+  const { status: validatedStatus, id: validatedId } = validatedFields.data;
+
+  try {
+    // Update the database
+    await sql`
+      UPDATE invoices
+      SET status = ${validatedStatus}
+      WHERE id = ${validatedId}
+    `;
+    revalidatePath('/dashboard/invoices');
+    return { status: 204, message: "Invoice updated successfully." }; // 204 No Content
+  } catch (error) {
+    console.error("Database Error:", error);
+    return { status: 500, message: "Database Error: Failed to Update Invoice." };
+  }
+}
+
 
 export async function deleteInvoice(id: string) {
   // throw new Error('Failed to Delete Invoice');

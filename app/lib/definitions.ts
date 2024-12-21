@@ -44,7 +44,9 @@ export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
   amount: number;
 };
 
-export type InvoiceStatusType = 'pending' | 'paid';
+export const invoiceStatuses = ['pending', 'paid', 'canceled'] as const;
+export type InvoiceStatusType = typeof invoiceStatuses[number];
+
 
 export type InvoicesTable = {
   id: string;
